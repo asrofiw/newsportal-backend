@@ -8,12 +8,14 @@ const {APP_PORT} = process.env
 
 // Import routes
 const userRoute = require('./routes/user')
+const authRoute = require('./routes/auth')
 
 app.use(bodyParser.urlencoded({extended:false}))
 app.use(morgan('dev'))
 app.use(cors())
 
 app.use('/', userRoute)
+app.use('/', authRoute)
 
 app.get('/', (req, res) => {
   res.send({

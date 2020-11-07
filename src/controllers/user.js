@@ -1,155 +1,101 @@
 const {User} = require('../models')
-const bcrypt = require('bcryptjs')
 const joi = require('joi')
+const response = require('../helpers/response')
 
 module.exports = {
-  createUser: async (req, res) => {
-    try {
-      const shcema = joi.object({
-        name: joi.string().required(),
-        email: joi.string().required(),
-        password: joi.string().required()
-      })
-  
-      let {value, error} = shcema.validate(req.body)
-      if (error) {
-        res.status(400).send({
-          success: false,
-          message: 'All fields must be filled',
-          error: error.message
-        })
-      }
-  
-      let {name, email, password} = value
-      const isExist = await User.findOne({
-        where: {email: email}
-      })
-  
-      if (isExist !== null) {
-        res.status(400).send({
-          success: false,
-          message: 'Email already used',
-        })
-      } else {
-        password = await bcrypt.hash(password, await bcrypt.genSalt(10))
-        const data = {
-          name, email, password
-        }
-        const results = await User.create(data)
-        res.send({
-          success: true,
-          message: `You've been successfully registered`,
-          results
-        })
-      }
-    } catch (e) {
-      res.status(500).send({
-        success: false,
-        message: 'Internal server error',
-        error: e.message,
-      })
-    }
-  },
-
   getUser: async (req, res) => {
     try {
       const results = await User.findAll({
         attributes: {exclude: ['password']}
       })
-      res.send({
-        success: true,
-        message: 'List of Users',
-        results
-      })
+      return response(res, 'List of Users', {results})
     } catch (e) {
-      res.status(500).send({
-        success: false,
-        message: 'Internal server error',
-        error: e.message,
-      })
+      return response(res, 'Internal server error', {error: e.message}, 500, false)
     }
   },
 
   getUserDetail: async (req, res) => {
     try {
-      const {id} = req.params
+      const {id} = req.user
       const results = await User.findByPk(id)
       if (results !== null) {
-        res.send({
-          success: true,
-          message: `User with id ${id}`,
-          results
-        })
+        return response(res, `User with id ${id}`, {results})
       } else {
-        res.status(404).send({
-          success: false,
-          message: 'User not found'
-        })
+        return response(res, 'User not found', {}, 404, false)
       }
     } catch (e) {
-      res.status(500).send({
-        succes: false,
-        message: 'Internal server error',
-        error: e.message,
-      })
+      return response(res, 'Internal server error', {error: e.message}, 500, false)
     }
   },
 
   updateUser: async (req, res) => {
     try {
-      const {id} = req.params
+      const {id} = req.user
       const results = await User.findByPk(id)
       if (results !== null) {
         const schema = joi.object({
           name: joi.string(),
           email: joi.string(),
-          dateofbirth: joi.string(),
+          birthdate: joi.string(),
           gender: joi.string(),
         })
 
         let {value, error} = schema.validate(req.body)
+        let avatar = ''
+        if (req.file) {
+          let { path } = req.file
+          path = path.split('\\')
+          path.shift()
+          path = path.join('/')
+          avatar = path
+          value = {
+            ...value,
+            avatar
+          }
+        } else {
+          avatar = undefined
+        }
 
         if (error) {
-          res.status(401).send({
-            success: false,
-            message: 'You have to fill at least one of them, if you want to change your data',
-            error: error.message
-          })
+          return response(res, 'Field must be filled', {error: error.message}, 400, false)
         } else {
-          const {name, email, dateofbirth, gender} = value
+          const {email} = value
           if (email) {
             const isExist = await User.findOne({
               where: {email: email}
             })
             if (isExist !== null) {
-              res.status(400).send({
-                success: false,
-                message: 'Email already used',
-              })
+              return response(res, 'Email already use', {}, 400, false)
             }
           }
-          const data = {
-            name, email, dateofbirth, gender
+
+          if (Object.values(value).length > 0) {
+            await results.update(value)
+            return response(res, 'Data has been changed', {results: value})
+          } else {
+            return response(res, 'You have to fill at least one of them, if you want to change your data', {}, 400, false)
           }
-          results.update(data)
-          res.send({
-            success: true,
-            message: 'Data has changed',
-            data
-          })
         }
       } else {
-        res.status(404).send({
-          success: false,
-          message: 'User not found',
-        })
+        return response(res, 'User not found', {}, 404, false)
       }
     } catch (e) {
-      res.status(500).send({
-        success: false,
-        message: 'Internal server error',
-        error: e.message,
-      })
+      return response(res, 'Internal server error', {error: e.message}, 500, false)
+    }
+  },
+
+  deleteUser: async (req, res) => {
+    try {
+      const {id} = req.user
+      const results = await User.findByPk(id)
+      if (results !== null) {
+        await results.destroy()
+        return response(res, 'User has been deleted')
+      } else {
+        return response(res, 'User not found', {}, 404, false)
+      }
+    } catch (e) {
+      return response(res, 'Internal server error', {error: e.message}, 500, false)
     }
   }
 }
