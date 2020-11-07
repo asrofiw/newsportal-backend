@@ -1,13 +1,20 @@
 const {User} = require('../models')
 const joi = require('joi')
 const response = require('../helpers/response')
+const {APP_URL} = process.env
 
 module.exports = {
   getUser: async (req, res) => {
     try {
-      const results = await User.findAll({
+      let results = await User.findAll({
         attributes: {exclude: ['password']}
       })
+      results.map((e, i) => {
+        if (results[i].avatar) {
+          results[i].avatar = `${APP_URL}${e.avatar}`
+        }
+      })
+
       return response(res, 'List of Users', {results})
     } catch (e) {
       return response(res, 'Internal server error', {error: e.message}, 500, false)
@@ -19,6 +26,9 @@ module.exports = {
       const {id} = req.user
       const results = await User.findByPk(id)
       if (results !== null) {
+        if (results.avatar) {
+          results.avatar = `${APP_URL}${results.avatar}`
+        }
         return response(res, `User with id ${id}`, {results})
       } else {
         return response(res, 'User not found', {}, 404, false)

@@ -32,7 +32,7 @@ module.exports = {
           name, email, password
         }
         const results = await User.create(data)
-        return response(res, `You've been successfully registered`, results)
+        return response(res, `You've been successfully registered`, {results})
       }
     } catch (e) {
       return response(res, 'Internal server error', {error: e.message}, 500, false)
