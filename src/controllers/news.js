@@ -1,4 +1,5 @@
 const {User, News} = require('../models')
+const qs = require('querystring')
 const joi = require('joi')
 const {Op} = require('sequelize')
 const response = require('../helpers/response')
@@ -63,7 +64,6 @@ module.exports = {
       } else {
         limit = parseInt(limit)
       }
-      console.log(limit)
 
       if (!search) {
         search = ''
@@ -80,7 +80,7 @@ module.exports = {
         offset: (page - 1) * limit
       })
 
-      if (data.length > 1) {
+      if (data.length > 0) {
         const results = data.map(e => {
           return {
             id: e.id,
@@ -90,7 +90,37 @@ module.exports = {
             date: e.createdAt
           }
         })
-        return response(res, 'List of News', {results})
+
+        const count = await News.count({
+          where: {
+            headline: {
+              [Op.substring]: search
+            }
+          }
+        })
+        
+        const pageInfo = {
+          count: 0,
+          pages: 0,
+          currentPage: page,
+          limitPerpage: limit,
+          nextLink: null,
+          prevLink: null
+        }
+        pageInfo.count = count
+        pageInfo.pages = Math.ceil(count / limit)
+        const { pages, currentPage } = pageInfo
+
+        if (currentPage < pages) {
+          pageInfo.nextLink = `${APP_URL}private/news?${qs.stringify({ ...req.query, ...{ page: page + 1 } })}`
+        }
+
+        if (currentPage > 1) {
+          pageInfo.prevLink = `${APP_URL}private/news?${qs.stringify({ ...req.query, ...{ page: page - 1 } })}`
+        }
+
+
+        return response(res, 'List of News', {results, pageInfo})
       } else {
         return response(res, 'Data not found', {}, 404, false)
       }
