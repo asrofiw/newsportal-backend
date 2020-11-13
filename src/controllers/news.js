@@ -29,7 +29,7 @@ module.exports = {
           image
         }
       } else {
-        return response(res, 'Image must be added', {}, 400, false)
+        image = undefined
       }
 
       if (error) {
@@ -60,7 +60,7 @@ module.exports = {
         page = parseInt(page)
       }
       if (!limit) {
-        limit = 10
+        limit = 5
       } else {
         limit = parseInt(limit)
       }
@@ -76,6 +76,9 @@ module.exports = {
             [Op.substring]: search
           }
         },
+        order: [
+          ['createdAt', 'DESC']
+        ],
         limit: limit,
         offset: (page - 1) * limit
       })
@@ -84,7 +87,7 @@ module.exports = {
         const results = data.map(e => {
           return {
             id: e.id,
-            image: e.image,
+            image: `${APP_URL}${e.image}`,
             headline: e.headline,
             category: e.category,
             date: e.createdAt
@@ -118,7 +121,6 @@ module.exports = {
         if (currentPage > 1) {
           pageInfo.prevLink = `${APP_URL}private/news?${qs.stringify({ ...req.query, ...{ page: page - 1 } })}`
         }
-
 
         return response(res, 'List of News', {results, pageInfo})
       } else {

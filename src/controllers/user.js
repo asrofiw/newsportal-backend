@@ -29,6 +29,7 @@ module.exports = {
         if (results.avatar) {
           results.avatar = `${APP_URL}${results.avatar}`
         }
+        results.password = undefined
         return response(res, `User with id ${id}`, {results})
       } else {
         return response(res, 'User not found', {}, 404, false)
@@ -67,7 +68,7 @@ module.exports = {
         }
 
         if (error) {
-          return response(res, 'Field must be filled', {error: error.message}, 400, false)
+          return response(res, 'Error', {error: error.message}, 400, false)
         } else {
           const {email} = value
           if (email) {
@@ -78,7 +79,7 @@ module.exports = {
               return response(res, 'Email already use', {}, 400, false)
             }
           }
-
+          console.log(value)
           if (Object.values(value).length > 0) {
             await results.update(value)
             return response(res, 'Data has been changed', {results: value})
