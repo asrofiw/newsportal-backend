@@ -12,5 +12,4 @@ route.get('/private/news/:id', authMiddleware, news.getNewsDetail)
 route.patch('/private/news/:id', authMiddleware, news.updateNews)
 route.delete('/private/news/:id', authMiddleware, news.deleteNews)
 
-
 module.exports = route

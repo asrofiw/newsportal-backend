@@ -1,10 +1,11 @@
-const {User, News} = require('../models')
+const { User, News } = require('../models')
 const qs = require('querystring')
 const joi = require('joi')
-const {Op} = require('sequelize')
+const { Op } = require('sequelize')
 const response = require('../helpers/response')
 const upload = require('../helpers/upload').single('image')
-const {APP_URL} = process.env
+const multer = require('multer')
+const { APP_URL } = process.env
 
 module.exports = {
   createNews: (req, res) => {
@@ -15,15 +16,15 @@ module.exports = {
         return response(res, err.message, {}, 400, false)
       }
       try {
-        const {id} = req.user
+        const { id } = req.user
         const schema = joi.object({
           headline: joi.string().required(),
           city: joi.string().required(),
           body: joi.string().required(),
           category: joi.string().required()
         })
-  
-        let {value, error} = schema.validate(req.body)
+
+        let { value, error } = schema.validate(req.body)
         let image = ''
         if (req.file) {
           let { path } = req.file
@@ -38,9 +39,9 @@ module.exports = {
         } else {
           image = undefined
         }
-  
+
         if (error) {
-          return response(res, 'Error', {error: error.message}, 400, false)
+          return response(res, 'Error', { error: error.message }, 400, false)
         }
         const findAuthor = await User.findByPk(id)
         value = {
@@ -48,22 +49,22 @@ module.exports = {
           author: findAuthor.name,
           authorId: id
         }
-  
+
         const results = await News.create(value)
         if (results) {
-          return response(res, 'Successfully added news', {results})
+          return response(res, 'Successfully added news', { results })
         } else {
           return response(res, 'Failed to add news', {}, 400, false)
         }
       } catch (e) {
-        return response(res, 'Internal server error', {error: e.message}, 500, false)
+        return response(res, 'Internal server error', { error: e.message }, 500, false)
       }
     })
   },
 
   getAllNews: async (req, res) => {
     try {
-      let {page, limit, search} = req.query
+      let { page, limit, search } = req.query
       if (!page) {
         page = 1
       } else {
@@ -77,10 +78,9 @@ module.exports = {
 
       if (!search) {
         search = ''
-      } else {
-        search = search
       }
-      const {count, rows} = await News.findAndCountAll({
+
+      const { count, rows } = await News.findAndCountAll({
         where: {
           headline: {
             [Op.substring]: search
@@ -94,16 +94,6 @@ module.exports = {
       })
 
       if (rows.length > 0) {
-        const results = data.map(e => {
-          return {
-            id: e.id,
-            image: e.image,
-            headline: e.headline,
-            category: e.category,
-            date: e.createdAt
-          }
-        })
-        
         const pageInfo = {
           count: 0,
           pages: 0,
@@ -124,19 +114,19 @@ module.exports = {
           pageInfo.prevLink = `${APP_URL}private/news?${qs.stringify({ ...req.query, ...{ page: page - 1 } })}`
         }
 
-        return response(res, 'List of News', {results, pageInfo})
+        return response(res, 'List of News', { results: rows, pageInfo })
       } else {
         return response(res, 'Data not found', {}, 404, false)
       }
     } catch (e) {
-      return response(res, 'Internal server error', {error: e.message}, 500, false)
+      return response(res, 'Internal server error', { error: e.message }, 500, false)
     }
   },
 
   getAllNewsByUser: async (req, res) => {
     try {
-      const {id} = req.user
-      const data = await News.findAll({where: {authorId: id}})
+      const { id } = req.user
+      const data = await News.findAll({ where: { authorId: id } })
       let results = []
       if (data.length > 1) {
         results = data.map(e => {
@@ -159,23 +149,23 @@ module.exports = {
           }
         ]
       }
-      return response(res, 'List of News', {results})
+      return response(res, 'List of News', { results })
     } catch (e) {
-      return response(res, 'Internal server error', {error: e.message}, 500, false)
+      return response(res, 'Internal server error', { error: e.message }, 500, false)
     }
   },
 
   getNewsDetail: async (req, res) => {
     try {
-      const {id} = req.params
+      const { id } = req.params
       const results = await News.findByPk(id)
       if (results) {
-        return response(res, `News with headline "${results.headline}"`, {results})
+        return response(res, `News with headline "${results.headline}"`, { results })
       } else {
         return response(res, 'Data not found', {}, 404, false)
       }
     } catch (e) {
-      return response(res, 'Internal server error', {error: e.message}, 500, false)
+      return response(res, 'Internal server error', { error: e.message }, 500, false)
     }
   },
 
@@ -188,9 +178,9 @@ module.exports = {
       }
 
       try {
-        const {id} = req.user
-        const {idNews} = req.params
-        const results = await News.findOne({where: {id: idNews, authorId: id}})
+        const { id } = req.user
+        const { idNews } = req.params
+        const results = await News.findOne({ where: { id: idNews, authorId: id } })
         if (results) {
           const schema = joi.object({
             headline: joi.string(),
@@ -198,8 +188,8 @@ module.exports = {
             body: joi.string(),
             category: joi.string()
           })
-    
-          let {value, error} = schema.validate(req.body)
+
+          let { value, error } = schema.validate(req.body)
           let image = ''
           if (req.file) {
             let { path } = req.file
@@ -214,32 +204,31 @@ module.exports = {
           } else {
             image = undefined
           }
-    
+
           if (error) {
-            return response(res, 'Field must be filled', {error: error.message}, 400, false)
+            return response(res, 'Field must be filled', { error: error.message }, 400, false)
           } else {
             if (Object.values(value).length > 0) {
               await results.update(value)
-              return response(res, 'Data has been changed', {results: value})
+              return response(res, 'Data has been changed', { results: value })
             } else {
               return response(res, 'You have to fill at least one of them, if you want to change your data', {}, 400, false)
             }
           }
-    
         } else {
           return response(res, 'Data not found!', {}, 404, false)
         }
       } catch (e) {
-        return response(res, 'Internal server error', {error: e.message}, 500, false)
+        return response(res, 'Internal server error', { error: e.message }, 500, false)
       }
     })
   },
 
   deleteNews: async (req, res) => {
     try {
-      const {id} = req.user
-      const {idNews} = req.params
-      const results = await News.findOne({where: {id: idNews, authorId: id}})
+      const { id } = req.user
+      const { idNews } = req.params
+      const results = await News.findOne({ where: { id: idNews, authorId: id } })
       if (results !== null) {
         await results.destroy()
         return response(res, 'Data has been deleted')
@@ -247,7 +236,7 @@ module.exports = {
         return response(res, 'Data not found', {}, 404, false)
       }
     } catch (e) {
-      return response(res, 'Internal server error', {error: e.message}, 500, false)
+      return response(res, 'Internal server error', { error: e.message }, 500, false)
     }
   }
 }

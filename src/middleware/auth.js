@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 const response = require('../helpers/response')
-const {APP_KEY} = process.env
+const { APP_KEY } = process.env
 
 module.exports = (req, res, next) => {
   const { authorization } = req.headers
