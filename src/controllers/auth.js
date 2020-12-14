@@ -56,7 +56,7 @@ module.exports = {
       if (checkEmail) {
         const pass = bcrypt.compareSync(password, checkEmail.password)
         if (pass) {
-          const token = jwt.sign({id: checkEmail.id}, APP_KEY)
+          const token = jwt.sign({id: checkEmail.id}, APP_KEY, {expiresIn: '1d'})
           return response(res, 'Login successfully', {token: token})
         } else {
           return response(res, `Password doesn't match`, {}, 400, false)

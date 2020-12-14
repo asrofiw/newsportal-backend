@@ -19,7 +19,8 @@ module.exports = (sequelize, DataTypes) => {
     city: DataTypes.STRING,
     body: DataTypes.TEXT,
     category: DataTypes.STRING,
-    author: DataTypes.STRING
+    author: DataTypes.STRING,
+    authorId: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'News',
