@@ -50,8 +50,8 @@ module.exports = {
           const schema = joi.object({
             name: joi.string(),
             email: joi.string(),
-            birthdate: joi.string().allow(null),
-            gender: joi.string().allow(null)
+            birthdate: joi.string().optional().allow(''),
+            gender: joi.string().optional().allow('')
           })
 
           let { value, error } = schema.validate(req.body)
