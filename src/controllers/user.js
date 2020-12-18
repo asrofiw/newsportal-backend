@@ -57,11 +57,8 @@ module.exports = {
           let { value, error } = schema.validate(req.body)
           let avatar = ''
           if (req.file) {
-            let { path } = req.file
-            path = path.split('\\')
-            path.shift()
-            path = path.join('/')
-            avatar = path
+            const { filename } = req.file
+            avatar = `uploads/${filename}`
             value = {
               ...value,
               avatar

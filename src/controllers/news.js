@@ -27,11 +27,8 @@ module.exports = {
         let { value, error } = schema.validate(req.body)
         let image = ''
         if (req.file) {
-          let { path } = req.file
-          path = path.split('\\')
-          path.shift()
-          path = path.join('/')
-          image = path
+          const { filename } = req.file
+          image = `uploads/${filename}`
           value = {
             ...value,
             image
@@ -192,11 +189,8 @@ module.exports = {
           let { value, error } = schema.validate(req.body)
           let image = ''
           if (req.file) {
-            let { path } = req.file
-            path = path.split('\\')
-            path.shift()
-            path = path.join('/')
-            image = path
+            const { filename } = req.file
+            image = `uploads/${filename}`
             value = {
               ...value,
               image
