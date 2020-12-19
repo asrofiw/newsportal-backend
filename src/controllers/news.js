@@ -126,31 +126,52 @@ module.exports = {
 
   getAllNewsByUser: async (req, res) => {
     try {
-      const { id } = req.user
-      const data = await News.findAll({ where: { authorId: id } })
-      let results = []
-      if (data.length > 1) {
-        results = data.map(e => {
-          return {
-            id: e.id,
-            image: e.image,
-            headline: e.headline,
-            category: e.category,
-            date: e.createdAt
-          }
-        })
+      let { page, limit } = req.query
+      if (!page) {
+        page = 1
       } else {
-        results = [
-          {
-            id: data.id,
-            image: data.image,
-            headline: data.headline,
-            category: data.category,
-            date: data.createdAt
-          }
-        ]
+        page = parseInt(page)
       }
-      return response(res, 'List of News', { results })
+      if (!limit) {
+        limit = 5
+      } else {
+        limit = parseInt(limit)
+      }
+
+      const { id } = req.user
+      const { count, rows } = await News.findAndCountAll({
+        where: { authorId: id },
+        order: [
+          ['createdAt', 'desc']
+        ],
+        limit: limit,
+        offset: (page - 1) * limit
+      })
+
+      if (rows.length > 1) {
+        const pageInfo = {
+          count: 0,
+          pages: 0,
+          currentPage: page,
+          limitPerpage: limit,
+          nextLink: null,
+          prevLink: null
+        }
+        pageInfo.count = count
+        pageInfo.pages = Math.ceil(count / limit)
+        const { pages, currentPage } = pageInfo
+
+        if (currentPage < pages) {
+          pageInfo.nextLink = `${APP_URL}private/news/user?${qs.stringify({ ...req.query, ...{ page: page + 1 } })}`
+        }
+
+        if (currentPage > 1) {
+          pageInfo.prevLink = `${APP_URL}private/news/user?${qs.stringify({ ...req.query, ...{ page: page - 1 } })}`
+        }
+        return response(res, 'List of News', { results: rows, pageInfo })
+      } else {
+        return response(res, 'Data not found', {}, 404, false)
+      }
     } catch (e) {
       return response(res, 'Internal server error', { error: e.message }, 500, false)
     }
