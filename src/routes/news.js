@@ -5,6 +5,7 @@ const route = require('express').Router()
 
 // Get news by user
 route.get('/private/news/user', authMiddleware, news.getAllNewsByUser)
+route.get('/private/news/user/:idNews', authMiddleware, news.getNewsDetailByUser)
 
 route.post('/private/news', authMiddleware, news.createNews)
 route.get('/private/news', authMiddleware, news.getAllNews)

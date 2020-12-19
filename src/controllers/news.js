@@ -191,6 +191,21 @@ module.exports = {
     }
   },
 
+  getNewsDetailByUser: async (req, res) => {
+    try {
+      const { id } = req.user
+      const { idNews } = req.params
+      const results = await News.findOne({ where: { authorId: id, id: idNews } })
+      if (results) {
+        return response(res, `News with headline "${results.headline}"`, { results })
+      } else {
+        return response(res, 'Data not found', {}, 404, false)
+      }
+    } catch (e) {
+      return response(res, 'Internal server error', { error: e.message }, 500, false)
+    }
+  },
+
   updateNews: (req, res) => {
     upload(req, res, async err => {
       if (err instanceof multer.MulterError) {
