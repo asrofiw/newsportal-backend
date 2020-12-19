@@ -61,7 +61,7 @@ module.exports = {
 
   getAllNews: async (req, res) => {
     try {
-      let { page, limit, search } = req.query
+      let { page, limit, search, sort } = req.query
       if (!page) {
         page = 1
       } else {
@@ -77,6 +77,10 @@ module.exports = {
         search = ''
       }
 
+      if (!sort) {
+        sort = 'desc'
+      }
+
       const { count, rows } = await News.findAndCountAll({
         where: {
           headline: {
@@ -84,7 +88,7 @@ module.exports = {
           }
         },
         order: [
-          ['createdAt', 'DESC']
+          ['createdAt', sort]
         ],
         limit: limit,
         offset: (page - 1) * limit
