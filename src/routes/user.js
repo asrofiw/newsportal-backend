@@ -8,6 +8,7 @@ route.get('/users', user.getUser)
 
 // Manage Profile
 route.get('/private/users', authMiddleware, user.getUserDetail)
+route.patch('/private/users/change-password', authMiddleware, user.changePassword)
 route.patch('/private/users', authMiddleware, user.updateUser)
 route.delete('/private/users', authMiddleware, user.deleteUser)
 

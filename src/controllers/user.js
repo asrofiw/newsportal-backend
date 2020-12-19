@@ -1,6 +1,7 @@
 const { User } = require('../models')
 const joi = require('joi')
 const response = require('../helpers/response')
+const bcrypt = require('bcryptjs')
 const upload = require('../helpers/upload').single('avatar')
 const multer = require('multer')
 
@@ -93,6 +94,42 @@ module.exports = {
         return response(res, 'Internal server error', { error: e.message }, 500, false)
       }
     })
+  },
+
+  changePassword: async (req, res) => {
+    try {
+      const { id } = req.user
+      const results = await User.findByPk(id)
+      if (results) {
+        const schema = joi.object({
+          oldPassword: joi.string().required(),
+          newPassword: joi.string().min(8).required(),
+          confirmPassword: joi.any()
+            .valid(joi.ref('newPassword'))
+            .required()
+        })
+        const { value, error } = schema.validate(req.body)
+        if (error) {
+          return response(res, 'Error', { error: error.message }, 400, false)
+        } else {
+          const pass = bcrypt.compareSync(value.oldPassword, results.password)
+          if (pass) {
+            const password = await bcrypt.hash(value.confirmPassword, await bcrypt.genSalt(10))
+            const data = {
+              password
+            }
+            await results.update(data)
+            return response(res, 'Data has been changed', {})
+          } else {
+            return response(res, 'Old password doesn\'t match', {}, 400, false)
+          }
+        }
+      } else {
+        return response(res, 'User not found', {}, 404, false)
+      }
+    } catch (e) {
+      return response(res, 'Internal server error', { error: e.message }, 500, false)
+    }
   },
 
   deleteUser: async (req, res) => {
