@@ -10,7 +10,7 @@ route.get('/private/news/user/:idNews', authMiddleware, news.getNewsDetailByUser
 route.post('/private/news', authMiddleware, news.createNews)
 route.get('/private/news', authMiddleware, news.getAllNews)
 route.get('/private/news/:id', authMiddleware, news.getNewsDetail)
-route.patch('/private/news/:id', authMiddleware, news.updateNews)
-route.delete('/private/news/:id', authMiddleware, news.deleteNews)
+route.patch('/private/news/:idNews', authMiddleware, news.updateNews)
+route.delete('/private/news/:idNews', authMiddleware, news.deleteNews)
 
 module.exports = route
