@@ -148,7 +148,7 @@ module.exports = {
         offset: (page - 1) * limit
       })
 
-      if (rows.length > 1) {
+      if (rows.length > 0) {
         const pageInfo = {
           count: 0,
           pages: 0,
