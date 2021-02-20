@@ -19,7 +19,7 @@ Express.js is a web application framework for Node.js. [More about Express](http
 1. Open app's directory in CMD or Terminal
 2. Type `npm install`
 3. Turn on Web Server and MySQL can using Third-party tool like xampp, etc.
-4. Create a database with the name ecommerce, and create table items
+4. Type `sequelize db:migrate` in CMD or Terminal
 5. Open Postman desktop application or Chrome web app extension that has installed before
 6. Choose HTTP Method and enter request url.(ex. localhost:8080/)
 7. You can see all the end point [here](#end-point)
